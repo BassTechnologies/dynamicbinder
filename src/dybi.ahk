@@ -1,53 +1,30 @@
-﻿;~ //////////////////////////////////////////////////////////////////
-;~ //////////////////////////////////////////////////////////////////
-;~ //////////////////////////////////////////////////////////////////
-;~ *
-;~ *
-;~ *
-;~ * ///////////////// Information ///////////////// *
-;~ Биндер для сервера GTA5RP
-;~ Разработчик - @bass_devware || GIT - @BassTechnologies
-;~ Версия за 11.10.2020 - Старт разработки
-;~ Версия за 13.10.2020 - Проработка будущих алгоритмов
-;~ Версия за 17.10.2020 - Завершение работы над адаптивным меню
-;~ Версия за 18.10.2020 - Закончил работу над адаптивным меню
-;~ Версия за 19.10.2020 - Закончил работу над меню настроек
-;~ Версия за 20.10.2020 - Применение параметров для создания хоткея
-;~ Версия за 21.10.2020 - Добавил кнопки управления. Добавил сохранение профиля.
-;~ Версия за 22.10.2020 - Добавил загрузку профилей.
-;~ Версия за 23.10.2020 - Добавил сохранение профилей, отображение профиля, исправление багов.
-;~ Версия за 24.10.2020 - Добавил возможность сохранения изменений в профиле. Снял ограничение на количество слотов.
-;~ Версия за 25.10.2020 - Исправил недочёт, который не позволял включать новые хоткеи/изменять уже существующие. Исправил баг с раскладкой, когда конфиг корректно не сохранялся.
-;~ Версия за 26.10.2020 - Исправил баг со съезжающими вниз слотами, которые залазили на кнопки. Не окончательно.
-;~ Версия за 27.10.2020 - Исправил баг с пустым sleep'ом и расширил слоты. Исправил глюк с созданием первого слота.
-;~ Версия за 28.10.2020 - Закончил косметику. Исправил сохранение скриншотов.
-;~ Версия за 12.11.2020 - Окончательно исправил баг со скринами. Запретил вызывать другие хоткеи когда один уже работает.
-;~ *
-;~ Количество строк чистого кода - <700
-;~ * ///////////////// Information ///////////////// *
-;~ *
-;~ *
-;~ *
-;~ //////////////////////////////////////////////////////////////////
-;~ //////////////////////////////////////////////////////////////////
-;~ //////////////////////////////////////////////////////////////////
+﻿
+/*
+< Credits >
+	Miroslav Bass
+	bassmiroslav@gmail.com
 
+	Last stable version: [1.0] 11.12.2020
+		~ Screenshot bug fixed
+		~ Banned action to call other hotkeys during active operation
+	Current version: [1.1]
+		~ [1.1.1] Added comment localization
+*/
 
-
-;~ [ Sys.cmd ]
+	; Sys.cmd
 SetWorkingDir %A_ScriptDir%
 SetBatchLines -1
 ListLines Off
 DetectHiddenText, on
 DetectHiddenWindows, on
 FileEncoding, UTF-8
-;~ ***
+
 #NoEnv
 #KeyHistory 0
 #SingleInstance force
 #IfWinActive ahk_exe GTA5.exe
-;~ [ Sys.cmd ]
 
+	; Run as Admin
 full_command_line := DllCall("GetCommandLine", "str")
 if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))	{
 	try	{
@@ -59,13 +36,7 @@ if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))	{
 	ExitApp
 }
 
-;~ //////////////////////////////////////////////////////////////////
-
-;~ /////////////////////
-;~ Переменные
-;~ /////////////////////
-
-;~ [ Переменные координаты элементов меню ]
+	; Initial elements coords variables 
 ;~ DropDownList
 ddlx := 282
 ;~ Settings button
@@ -76,17 +47,17 @@ db := 400
 ee := 142
 ;~ Text
 ts := 20
-;~ [ Переменные координаты элементов меню ]
 
-;~ [ Переменные размеры окна ]
+	; Initial menu window size
 winsizew := "460"
 winsizeh := "116"
-;~ [ Переменные кординаты хоткеев ]
+
+	; Initial hotkeys elem coords
 hotkeysizex := "40"
 hotkeysizey := "59"
-;~ [ Количество хоткеев ]
+
 hotkeyscount := 0
-;~ [ Массивы, в которыъ хранятся данные элементов хоткеев ]
+
 hotkeysarray := []
 settingsarray := []
 deletesarray := []
@@ -94,22 +65,14 @@ namesarray := []
 countarray := []
 textnumber := []
 7reserve := [], 8reserve := [], 9reserve := [], 10reserve := [], 11reserve := []
-;~ [ Загружать профиль или нет. НЕ МЕНЯТЬ. ]
+
+	; Auto load profile func
 loading := true
 
+	; Logic variables (don't touch)
 advancemode := false
 advancemode2 := false
 hotkeyinprogress := false
-;~ [ Для создания уникального идентификатора ]
-;~ alphabet := ["q","w","e","r","t","y","u","i","o","p","a","s","d","f","g","h","j","k","l","z","x","c","v","b","n","m"]
-
-;~ /////////////////////
-;~ Переменные
-;~ /////////////////////
-
-;~ /////////////////////
-;~ [ GUI ]
-;~ /////////////////////
 
 Menu, Tray, Icon, Shell32.dll, 170
 Menu, Tray, add, GTA5 Binder, Show,
@@ -132,8 +95,6 @@ Menu, Tray, NoStandard
 
 GUI:
 Gui, -SysMenu
-;~ Gui, Add, Button, x302 y2 w55 h16  gdeleteprofile, Удалить
-;~ Gui, Add, Button, x358 y2 w25 h16  vmenub1 gupdate, U
 Gui, Add, Button, x385 y2 w25 h16  vmenub2 ghide, --
 Gui, Add, Button, x412 y2 w25 h16  vmenub3 gGuiClose, X
 Gui, Add, Button, x12 y80 w150 h23 vsaveall gsaveall +Disabled, Применить настройки
@@ -147,9 +108,11 @@ Gui, Add, Text, x12 y49 w20 h20 , №
 Gui, Add, GroupBox, x5 y33 w350 h40 ,
 Gui, Add, GroupBox, x365 y33 w70 h40 ,
 Gui, Add, Button, x370 y44 w60 h23 gaddhotkey, Добавить
-;~ Gui, Add, Link, x182 y3 w110 h14, <a href="https://www.blast.hk/members/131470/">@bass_devware</a>
 Gui, Show, w%winsizew% h%winsizeh% hide, GTA5RP BINDER R.
 
+	/* Expanding a menu window for future hotkeys 
+	(GUI link takes part in the work algorithms and therefore after remove a least hotkey we needed free space, which we create with a crutch) 
+	*/
 winsizeh += 29
 ControlMove, Применить настройки,,(winsizeh-31),,,GTA5RP BINDER R.
 	ControlMove, Создать профиль,,(winsizeh-31),,,GTA5RP BINDER R.
@@ -164,11 +127,11 @@ Gui, key:Show, w484 h58 hide, Выполняем...
 Gui, key2:-SysMenu +Disabled +AlwaysOnTop
 Gui, key2:Add, Text, x65 y7 w350 h40 +Border +Center, `nЗагружаем выбранный профиль. Пожалуйста`, подождите `;)
 Gui, key2:Show, w484 h58 hide, Выполняем...
-;~ /////////////////////
-;~ [ GUI ]
-;~ /////////////////////
 
-;~ [ Проверка на ранее загруженный профиль ]
+/*
+*/
+
+	; Trying to load saved profile by reading the config file
 If (loading)	{
 FileReadLine, Prof, %A_WorkingDir%\Res\config.txt, 1
 if (RegExMatch(Prof, "\[Load Profile = (.*)\]", profil))	{
@@ -183,16 +146,14 @@ if (RegExMatch(Prof, "\[Load Profile = (.*)\]", profil))	{
 }
 }
 
-;~ [ Обновить список профилей из папки ]
+	;  Update profile's list from folder
 update:
 GuiControl,, move4, | 
 Loop, %A_WorkingDir%\Profiles\*profile, , 1
 	GuiControl,, move4, %A_LoopFileName%
-
-;~ //////////////////////////////////////////////////////////////////
 return
 
-;~ [ Создание профиля ]
+	;  Create profile
 createprofile:
 Gui, settingsmenu:Destroy
 InputBox, NameProfile, GTA5RP BINDER R., Введите название для профиля ниже:,,260,130
@@ -235,6 +196,7 @@ loop, % hotkeyscount
 gosub, update
 return
 
+	; Remove profile
 deleteprofile:
 FileDelete, %A_WorkingDir%\Res\config.txt
 Gui, 1:destroy
@@ -257,7 +219,7 @@ gosub, GUI
 gui 1:show
 return
 
-;~ [ Загрузка профиля ]
+	; Load profile
 profile:
 gui, submit, nohide
 OurProfile := move4
@@ -330,7 +292,7 @@ gosub, saveall
 ;~ gui, 1:show
 return
 
-;~ [ Применить хоткеи ]
+	; Apply hotkeys
 saveall:
 if (GetLayout("A") != "En")  ; Исправление глюка, при котором если сохранить хоткеи с русской расскладкой, то они сохранятся в файле так же на русском, но ведь GUI HOTKEY не умеет читать русский, что = пустым строкам.
 	Send {LAlt Down}{Shift}{LAlt Up}
@@ -390,7 +352,7 @@ gosub, update
 TrayTip, GTA5RP BINDER R.,  Загрузили профиль!, 1
 return
 
-;~ [ Отправка хоткея ]
+	; Activate hotkey
 sendhotkey:
 if (hotkeyinprogress)	{
 	SoundBeep, 200, 200
@@ -440,7 +402,7 @@ Loop, % listofhotkeys.count()
 hotkeyinprogress := false
 return
 
-;~ [ Настройки хоткея ]
+	; Hotkey settings
 settings:
 ControlGetFocus, OutputVar, A
 loop, % settingsarray.count()
@@ -497,12 +459,7 @@ loop, % counthotkeys%CurrentButton%
 }
 return
 
-;~ numpad5::
-;~ gui, settingsmenu:submit, nohide
-;~ MsgBox % 7reserve.count()
-;~ MsgBox % 7reserve[1] "`n" 7reserve[2] "`n" 7reserve[3] "`n" 7reserve[4] "`n" 7reserve[5] "`n" 7reserve[6] "`n" 7reserve[7] "`n" 7reserve[8] "`n" 7reserve[9] "`n" 7reserve[10] "`n---`n" 7reserve[11]"`n" 7reserve[12] "`n" 7reserve[13] "`n" 7reserve[14] "`n" 7reserve[15] "`n" 7reserve[16] "`n" 7reserve[17] "`n" 7reserve[18] "`n" 7reserve[19] "`n" 7reserve[20]
-;~ return
-
+	; Save hotkey
 savehotkey:
 gui, settingsmenu:submit, nohide
 MsgBox, 262196, GTA5RP Binder, После сохранения параметров`, текущий хоткей и хоткеи до него потеряют свойства к расширению количества отправляемых строк!`n`nРедактировать их можно будет!`n`nСохранить?
@@ -552,7 +509,7 @@ gui, settingsmenu:destroy
 return
 ;~ //////////////////////////////////////////////////////////////////
 
-;~ [ Удаление хоткея ]
+	; Remove hotkey
 delete:
 advancemode2 := false
 ControlGetFocus, OutputVar, GTA5RP BINDER R.
@@ -580,9 +537,8 @@ loop, % hotkeysarray.count()
 		5reserve.push(hotkey%A_Index%)
 	6reserve.push(textnumber%A_Index%)
 }
-;~ [ Массивы для сохранения значений из переменных контролов окна ]
 
-;~ [ Возвращаемся к стоковому состоянию ]
+	; Restore initial script params
 winsizew := "460"
 winsizeh := "116"
 hotkeysizex := "40"
@@ -594,7 +550,6 @@ ee := 142
 ts := 20
 gui, destroy
 Gui, settingsmenu:Destroy
-;~ [ Возвращаемся к стоковому состоянию ]
 
 temp = 0
 ;~ Собираем общее количество строк на все хоткеи до выбранного
@@ -693,7 +648,7 @@ gui, submit, nohide
 guicontrol, Disable, saveall
 return
 
-;~ [ Добавление хоткея ]
+	; Add hotkey
 addhotkey:
 gui, submit, nohide
 guicontrol, enable, saveall
@@ -773,7 +728,7 @@ hotkeyscount++
 hotkeysizey += 26
 temp1 := hotkeysizey+3
 
-;~ [ Создаём новые элементы с переменными параметрами ]
+	; Creating elements with variables params
 Gui, Add, Hotkey, x%hotkeysizex% y%hotkeysizey% w90 h20 vhotkey%hotkeyscount% ghotkeylabel, % alphabet[hotkeyscount]
 Gui, Add, Text, x%ts% y%temp1% w19 h20 vnumb%hotkeyscount%, #%hotkeyscount%
 Gui, Add, Edit, x%ee% y%hotkeysizey% w120 h20 vnamehotkeys%hotkeyscount%, Name%hotkeyscount%
@@ -781,7 +736,7 @@ Gui, Add, DropDownList, x%ddlx% y%hotkeysizey% w50 h20 Choose1 R5 vcounthotkeys%
 Gui, Add, Button, x%sb% y%hotkeysizey% w61 h23 gsettings, S%hotkeyscount%
 Gui, Add, Button, x%db% y%hotkeysizey% w50 h23 gdelete, D%hotkeyscount%
 
-;~ Система Определение Элементов
+	; Define elements system
 WinGet, controlz, ControlList, GTA5RP BINDER R.
 Loop, parse, controlz, `n,
 {
@@ -814,13 +769,13 @@ Loop, parse, controlz, `n,
 		}
 	}
 	
-;~ Определяем название хоткея
+	; Define hotkey name
 	if (temp2 = "Name" . hotkeyscount)
 		namesarray.push(A_LoopField)
-;~ Определяем кол-во строк хоткея
+	; Define hotkey strings count
 	if (temp2 = "Count" . hotkeyscount)
 		countarray.push(A_LoopField)
-;~ Нумерация через gui, text
+	;~ Indicate numbering by gui, text
 	if (temp2 = "#" . hotkeyscount)
 		textnumber.push(A_LoopField)
 }
@@ -843,9 +798,8 @@ if  (5reserve[hotkeyscount] != "")	{
 		Control, choose,1,% countarray[hotkeyscount]
 	}
 return
-;~ //////////////////////////////////////////////////////////////////
 
-;~ [ Определяем язык раскладки. Нужно для корректного сохранения конфига ]
+	; Define system language. It is necessary for the correct saving of the configuration.
 GetLayout(ID)
 {
    hWnd := ID = "A" ? WinExist("A") : ID

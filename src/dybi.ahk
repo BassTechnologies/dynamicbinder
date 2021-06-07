@@ -9,6 +9,7 @@
 		~ Banned action to call other hotkeys during active operation
 	Current version: [1.1]
 		~ [1.1.1] Added comment localization
+		~ [1.1.2] Completed dev comments localization
 */
 
 	; Sys.cmd
@@ -179,12 +180,17 @@ loop, % hotkeyscount
 {
 	mainindex := A_Index
 	temp = 0
-;~ Собираем общее количество строк на все хоткеи до выбранного
+
+; Now, bold selected hotkey by subtracting algorithm
+
+; Collect the total number of lines for all hotkeys up to the selected (incl.)
 	loop, % mainindex
 		temp += counthotkeys%A_Index%
-;~ Отнимаем хоткеи выбранного
+
+; Subtracting the selected hotkey number from the total
 	temp -= counthotkeys%mainindex%
-;~ Заходим на первую строку выбранного
+
+; Enter to first string of selected hotkey (each hotkey have a N'count of hotkey strings to reproduce)
 	temp += 1
 	FileAppend, % "[" hotkey%mainindex% "]`n" "Name = "namehotkeys%mainindex% "`nCount = " counthotkeys%mainindex% "`n", %A_WorkingDir%\Profiles\%NameProfile%.profile
 	loop, % counthotkeys%mainindex%
@@ -294,7 +300,7 @@ return
 
 	; Apply hotkeys
 saveall:
-if (GetLayout("A") != "En")  ; Исправление глюка, при котором если сохранить хоткеи с русской расскладкой, то они сохранятся в файле так же на русском, но ведь GUI HOTKEY не умеет читать русский, что = пустым строкам.
+if (GetLayout("A") != "En")  ; keyboard layout fix for russian/any another layout
 	Send {LAlt Down}{Shift}{LAlt Up}
 gui, settingsmenu:submit
 gui, submit, nohide
@@ -334,12 +340,17 @@ loop, % hotkeyscount
 {
 	mainindex := A_Index
 	temp = 0
-;~ Собираем общее количество строк на все хоткеи до выбранного
+
+; Now, bold selected hotkey by subtracting algorithm
+
+; Collect the total number of lines for all hotkeys up to the selected (incl.)
 	loop, % mainindex
 		temp += counthotkeys%A_Index%
-;~ Отнимаем хоткеи выбранного
+
+; Subtracting the selected hotkey number from the total
 	temp -= counthotkeys%mainindex%
-;~ Заходим на первую строку выбранного
+
+; Enter to first string of selected hotkey (each hotkey have a N'count of hotkey strings to reproduce)
 	temp += 1
 	FileAppend, % "[" hotkey%mainindex% "]`n" "Name = "namehotkeys%mainindex% "`nCount = " counthotkeys%mainindex% "`n", %A_WorkingDir%\Profiles\%OurProfile%
 	loop, % counthotkeys%mainindex%
@@ -364,12 +375,17 @@ Loop, % listofhotkeys.count()
 	{
 		CurrentScreen := A_Index
 		temp = 0
-;~ Собираем общее количество строк на все хоткеи до выбранного
+
+; Now, bold selected hotkey by subtracting algorithm
+
+; Collect the total number of lines for all hotkeys up to the selected (incl.)
 		loop, % A_Index
 			temp += counthotkeys%A_Index%
-;~ Отнимаем хоткеи выбранного
+
+; Subtracting the selected hotkey number from the total
 		temp -= counthotkeys%A_Index%
-;~ Заходим на первую строку выбранного
+
+; Enter to first string of selected hotkey (each hotkey have a N'count of hotkey strings to reproduce)
 		temp += 1
 		loop, % counthotkeys%A_Index%
 		{
@@ -465,29 +481,35 @@ gui, settingsmenu:submit, nohide
 MsgBox, 262196, GTA5RP Binder, После сохранения параметров`, текущий хоткей и хоткеи до него потеряют свойства к расширению количества отправляемых строк!`n`nРедактировать их можно будет!`n`nСохранить?
 IfMsgBox, No
 	return
-;~ При сохранении настроек хоткея, блокируем количество его строк
+
+; When hotkey settings saving, disable the ability to change the number of lines in the future
 GuiControl, 1:Disable, counthotkeys%CurrentButton%
 loop, % CurrentButton
 {
 	temp := CurrentButton - A_Index
 	GuiControl, 1:Disable, counthotkeys%temp%
 }
-;~ см. Ниже ***
+;~ See. below ***
 does := true
-;~ Пробегаем по всем строкам хоткея
+
+; Process all hotkey Lines
 loop, % counthotkeys%CurrentButton%
 {
 temp = 0
-;~ Собираем общее количество строк на все хоткеи до выбранного
+
+; Now, bold selected hotkey by subtracting algorithm
+
+; Collect the total number of lines for all hotkeys up to the selected (incl.)
 	loop, % CurrentButton
 		temp += counthotkeys%A_Index%
-;~ Отнимаем хоткеи выбранного
+
+; Subtracting the selected hotkey number from the total
 	temp -= counthotkeys%CurrentButton%
-;~ Заходим на первую строку выбранного
+
+; Enter to first string of selected hotkey (each hotkey have a N'count of hotkey strings to reproduce)
 	temp += A_Index
 	
-	;~ При сохранении изменений мы сначала удаляем старый вариант строк, а на их место ставим новые.
-	;~ Если мы ещё не удаляли - удаляем
+	; When we save hotkey changes, first of all remove last options.
 	;~ ***
 	if (does)	{
 		7reserve.RemoveAt(temp, counthotkeys%CurrentButton%)
@@ -505,9 +527,8 @@ temp = 0
 }
 guicontrol, 1:Enable, saveall
 gui, settingsmenu:destroy
-;~ [ Массивы для сохранения значений из переменных контролов окна ]
+; Arrays for saving values from win controls variables
 return
-;~ //////////////////////////////////////////////////////////////////
 
 	; Remove hotkey
 delete:
@@ -523,7 +544,7 @@ loop, % deletesarray.count()
 MsgBox, 262196, GTA5RP BINDER R., Вы действительно хотите удалить хоткей № %CurrentButton% ?
 IfMsgBox, No
 	return
-;~ [ Массивы для сохранения значений из переменных контролов окна ]
+; Arrays for saving values from win controls variables
 1reserve := [], 2reserve := [], 3reserve := [], 4reserve := [], 5reserve := [], 6reserve := []
 gui, submit, nohide
 loop, % hotkeysarray.count()
@@ -552,12 +573,16 @@ gui, destroy
 Gui, settingsmenu:Destroy
 
 temp = 0
-;~ Собираем общее количество строк на все хоткеи до выбранного
+; Now, bold selected hotkey by subtracting algorithm
+
+; Collect the total number of lines for all hotkeys up to the selected (incl.)
 loop, % CurrentButton
 	temp += counthotkeys%A_Index%
-;~ Отнимаем хоткеи выбранного
+
+; Subtracting the selected hotkey number from the total
 temp -= counthotkeys%CurrentButton%
-;~ Заходим на первую строку выбранного
+
+; Enter to first string of selected hotkey (each hotkey have a N'count of hotkey strings to reproduce)
 temp += 1
 7reserve.RemoveAt(temp, counthotkeys%CurrentButton%)
 8reserve.RemoveAt(temp, counthotkeys%CurrentButton%)
@@ -566,6 +591,7 @@ temp += 1
 11reserve.RemoveAt(temp, counthotkeys%CurrentButton%)
 
 ;~ [ IF - Если всего 1 хоткей и его нужно удалить, ELSE - Если хоткеев больше одного ]
+; IF hotkeys count == 1, remove, ELSE - hotkeys count > 1
 if (deletesarray.count() = 1)	{
 	deletesarray.RemoveAt(CurrentButton, 1)
 		settingsarray.RemoveAt(CurrentButton, 1)
@@ -615,7 +641,6 @@ if (deletesarray.count() = 1)	{
 	hotkeysizex := "40"
 	hotkeysizey := "59"
 	advancemode2 := true
-	;~ MsgBox 22
 	}
 					;~ winsizeh += 29
 			;~ MsgBox plus
@@ -632,11 +657,11 @@ if (deletesarray.count() = 1)	{
 	;~ По сути, можно вообще убрать условие if (deletesarray.count() = 1), так как даже без него всё будет работать. Но вдруг нам нужно будет сделать конкретно с первым слотом что-либо.
 	;~ !!!
 
-;~ Блокируем уже созданные хоткеи
+; Blocking already created hotkeys
 loop, % hotkeyscount
 	GuiControl, 1:Disable, counthotkeys%A_Index%
 	
-;~ [ Мы удалили нужный хоткей и вернули на места другие ]
+; Removed required hotkey and  
 GuiControl, 1:, currentprofile, Текущий профиль: %OurProfile%
 gui, show
 Gui, key:hide
@@ -652,8 +677,8 @@ return
 addhotkey:
 gui, submit, nohide
 guicontrol, enable, saveall
-;~ MsgBox % winsizeh
-;~ [ Ограничение по высоте до 10 слотов ]
+
+; Max 10 hotkeys on one page
 if (hotkeyscount > 9)	{
 	if !(advancemode)
 	{
@@ -743,14 +768,14 @@ Loop, parse, controlz, `n,
 	gui, submit, nohide
 	ControlGetText, temp2, %A_LoopField%, GTA5RP BINDER R.
 
-;~ Определяем кнопку настроек
+	; Define settings button
 	if (temp2 = "S" . hotkeyscount)
 		settingsarray.push(A_LoopField)
-;~ Определяем кнопку удаления
+	; Define remove button
 	if (temp2 = "D" . hotkeyscount)
 		deletesarray.push(A_LoopField)
 	
-;~ Определяем сам хоткей. ControlGetText не видит текст из контрола хоткея, поэтому приветствуйте своему взору костыль
+; Define selected hotkey. ControlGetText doesnt see hotkey control text, then here is a crutch
 	gui, submit, nohide
 	if (hotkeysarray.count() <= 0)
 		if (RegExMatch(A_LoopField, "msctls_hotkey(\d\d\d\d?)", num))
@@ -780,7 +805,7 @@ Loop, parse, controlz, `n,
 		textnumber.push(A_LoopField)
 }
 
-;~ [ IF - Восстанавливает данные из переменных в необходимые хоткеи при удалении одного из хоткеев. ELSE - Вносит стоковые значения в хоткеи. ]
+; IF - restore hotkeys data from variables when we remove one of each hotkeys, ELSE - enter initial data
 if  (5reserve[hotkeyscount] != "")	{
 	GuiControl,, % namesarray[hotkeyscount], % 3reserve[hotkeyscount]
 		GuiControl,, % settingsarray[hotkeyscount], Настройки

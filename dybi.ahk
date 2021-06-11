@@ -11,11 +11,10 @@
 		~ [1.1.1] Added comment localization
 		~ [1.1.2] Completed dev comments localization
 	Current version: [1.2]
-		~ [1.2.1] Added process selector menu (select the required process from the list of tasks)
-	
+		~ [1.2.1] Added process selector menu (select the required process from the list of tasks), cosmetic changes
 */
 
-	; Sys.cmd
+; Sys.cmd
 SetWorkingDir %A_ScriptDir%
 SetBatchLines -1
 ListLines Off
@@ -39,7 +38,8 @@ if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))	{
 	ExitApp
 }
 
-	; Initial elements coords variables 
+; Initial elements coords variables 
+
 ;~ DropDownList
 ddlx := 282
 ;~ Settings button
@@ -51,35 +51,26 @@ ee := 142
 ;~ Text
 ts := 20
 
-	; Initial menu window size
-winsizew := "460"
-winsizeh := "116"
+; Initial menu window size
+winsizew := "460", winsizeh := "116"
 
-	; Initial hotkeys elem coords
-hotkeysizex := "40"
-hotkeysizey := "59"
+; Initial hotkeys elem coords
+hotkeysizex := "40", hotkeysizey := "59"
 
 hotkeyscount := 0
 
-hotkeysarray := []
-settingsarray := []
-deletesarray := []
-namesarray := []
-countarray := []
+hotkeysarray := [], settingsarray := [], deletesarray := [], namesarray := [], countarray := []
 textnumber := []
 7reserve := [], 8reserve := [], 9reserve := [], 10reserve := [], 11reserve := []
 
-	; Auto load profile func
+; Auto load profile func
 loading := true
 
-	; Logic variables (don't touch)
-advancemode := false
-advancemode2 := false
-hotkeyinprogress := false
+; Logic variables (don't touch)
+advancemode := false, advancemode2 := false, hotkeyinprogress := false
 
 Menu, Tray, Icon, Shell32.dll, 170
 Menu, Tray, add, Process Settings, ProcessMenu,
-; Menu, Tray, disable, GTA5 Binder
 Menu, Tray, add,
 Menu, Tray, add, Показать, Show,
 Menu, Tray, Default, Показать,
@@ -108,9 +99,10 @@ Gui, Add, GroupBox, x365 y33 w70 h40 ,
 Gui, Add, Button, x370 y44 w60 h23 gaddhotkey, Добавить
 Gui, Show, w%winsizew% h%winsizeh% hide, GTA5RP BINDER R.
 
-	/* Expanding a menu window for future hotkeys 
+/* 
+	Expanding a menu window for future hotkeys 
 	(GUI link takes part in the work algorithms and therefore after remove a least hotkey we needed free space, which we create with a crutch) 
-	*/
+*/
 winsizeh += 29
 ControlMove, Применить настройки,,(winsizeh-31),,,GTA5RP BINDER R.
 	ControlMove, Создать профиль,,(winsizeh-31),,,GTA5RP BINDER R.
@@ -119,17 +111,17 @@ ControlMove, Применить настройки,,(winsizeh-31),,,GTA5RP BINDE
 WinMove, GTA5RP BINDER R.,,,, (winsizew), (winsizeh)
 
 Gui, key:-SysMenu +Disabled +AlwaysOnTop
-Gui, key:Add, Text, x65 y7 w350 h40 +Border +Center, `nУдаляем выбранный хоткей. Пожалуйста`, подождите `;)
+	Gui, key:Add, Text, x65 y7 w350 h40 +Border +Center, `nУдаляем выбранный хоткей. Пожалуйста`, подождите `;)
 Gui, key:Show, w484 h58 hide, Выполняем...
 
 Gui, key2:-SysMenu +Disabled +AlwaysOnTop
-Gui, key2:Add, Text, x65 y7 w350 h40 +Border +Center, `nЗагружаем выбранный профиль. Пожалуйста`, подождите `;)
+	Gui, key2:Add, Text, x65 y7 w350 h40 +Border +Center, `nЗагружаем выбранный профиль. Пожалуйста`, подождите `;)
 Gui, key2:Show, w484 h58 hide, Выполняем...
 
 /*
 */
 
-	; Trying to load saved profile by reading the config file
+; Trying to load saved profile by reading the config file
 If (loading)	{
 FileReadLine, Prof, %A_WorkingDir%\Res\config.txt, 1
 if (RegExMatch(Prof, "\[Load Profile = (.*)\]", profil))	{
@@ -144,7 +136,7 @@ if (RegExMatch(Prof, "\[Load Profile = (.*)\]", profil))	{
 }
 }
 
-	;  Update profile's list from folder
+;  Update profile's list from folder
 update:
 SoundBeep, 1000, 100
 GuiControl,, move4, | 
@@ -152,7 +144,7 @@ Loop, %A_WorkingDir%\Profiles\*profile, , 1
 	GuiControl,, move4, %A_LoopFileName%
 return
 
-	;  Create profile
+;  Create profile
 createprofile:
 Gui, settingsmenu:Destroy
 InputBox, NameProfile, GTA5RP BINDER R., Введите название для профиля ниже:,,260,130
@@ -161,8 +153,7 @@ if ErrorLevel
 if (NameProfile = "")
 	return
 loop,% hotkeyscount
-	if (hotkey%A_Index% = "")
-	{
+	if (hotkey%A_Index% = "")	{
 		MsgBox, 262160, GTA5RP BINDER R., Для сохранения профиля необходимо убрать все пустые хоткеи!
 		return
 	}
@@ -200,7 +191,7 @@ loop, % hotkeyscount
 gosub, update
 return
 
-	; Remove profile
+; Remove profile
 deleteprofile:
 FileDelete, %A_WorkingDir%\Res\config.txt
 Gui, 1:destroy
@@ -223,7 +214,7 @@ gosub, GUI
 gui 1:show
 return
 
-	; Load profile
+; Load profile
 profile:
 gui, submit, nohide
 OurProfile := move4
@@ -296,7 +287,7 @@ gosub, saveall
 ;~ gui, 1:show
 return
 
-	; Apply hotkeys
+; Apply hotkeys
 saveall:
 if (GetLayout("A") != "En")  ; keyboard layout fix for russian/any another layout
 	Send {LAlt Down}{Shift}{LAlt Up}
@@ -305,8 +296,7 @@ gui, submit, nohide
 loop, % listofhotkeys.count()
 	Hotkey, % listofhotkeys[A_Index], off
 loop,% hotkeyscount
-	if (hotkey%A_Index% = "")
-	{
+	if (hotkey%A_Index% = "")	{
 		MsgBox, 262160, GTA5RP BINDER R., Для применения профиля необходимо убрать все пустые хоткеи! `n`nЕсли вы уже это сделали, нажмите кнопку сохранить в любом из хоткеев!
 		return
 	}
@@ -361,7 +351,7 @@ gosub, update
 TrayTip, GTA5RP BINDER R.,  Загрузили профиль!, 1
 return
 
-	; Activate hotkey
+; Activate hotkey
 sendhotkey:
 if (hotkeyinprogress)	{
 	SoundBeep, 200, 200
@@ -369,8 +359,7 @@ if (hotkeyinprogress)	{
 }
 hotkeyinprogress := true
 Loop, % listofhotkeys.count()
-	if (A_ThisHotkey = listofhotkeys[A_Index])
-	{
+	if (A_ThisHotkey = listofhotkeys[A_Index])	{
 		CurrentScreen := A_Index
 		temp = 0
 
@@ -416,7 +405,7 @@ Loop, % listofhotkeys.count()
 hotkeyinprogress := false
 return
 
-	; Hotkey settings
+; Hotkey settings
 settings:
 ControlGetFocus, OutputVar, A
 loop, % settingsarray.count()
@@ -473,7 +462,7 @@ loop, % counthotkeys%CurrentButton%
 }
 return
 
-	; Save hotkey
+; Save hotkey
 savehotkey:
 gui, settingsmenu:submit, nohide
 MsgBox, 262196, GTA5RP Binder, После сохранения параметров`, текущий хоткей и хоткеи до него потеряют свойства к расширению количества отправляемых строк!`n`nРедактировать их можно будет!`n`nСохранить?
@@ -528,7 +517,7 @@ gui, settingsmenu:destroy
 ; Arrays for saving values from win controls variables
 return
 
-	; Remove hotkey
+; Remove hotkey
 delete:
 advancemode2 := false
 ControlGetFocus, OutputVar, GTA5RP BINDER R.
@@ -557,7 +546,7 @@ loop, % hotkeysarray.count()
 	6reserve.push(textnumber%A_Index%)
 }
 
-	; Restore initial script params
+; Restore initial script params
 winsizew := "460"
 winsizeh := "116"
 hotkeysizex := "40"
@@ -743,10 +732,7 @@ ControlMove, Применить настройки,,(winsizeh-31),,,GTA5RP BINDE
 WinMove, GTA5RP BINDER R.,,,, (winsizew), (winsizeh)
 
 if !(advancemode)
-{
-	;~ MsgBox plus
 	winsizeh += 26
-}
 hotkeyscount++
 hotkeysizey += 26
 temp1 := hotkeysizey+3
@@ -759,7 +745,7 @@ Gui, Add, DropDownList, x%ddlx% y%hotkeysizey% w50 h20 Choose1 R5 vcounthotkeys%
 Gui, Add, Button, x%sb% y%hotkeysizey% w61 h23 gsettings, S%hotkeyscount%
 Gui, Add, Button, x%db% y%hotkeysizey% w50 h23 gdelete, D%hotkeyscount%
 
-	; Define elements system
+; Define elements system
 WinGet, controlz, ControlList, GTA5RP BINDER R.
 Loop, parse, controlz, `n,
 {
@@ -822,6 +808,18 @@ if  (5reserve[hotkeyscount] != "")	{
 	}
 return
 
+; // Choose process
+List:
+gui, process:submit, nohide
+if (A_GuiEvent = "DoubleClick")	{
+    LV_GetText(Procname, A_EventInfo)  ; Get the text from the row's field.
+    GuiControl,process:, Choose, Choose: %Procname%
+	WinGet, ProcWinID, ID, ahk_exe %Procname%
+    GuiControl, process:Enable, Choose
+}
+Return
+
+; Find btn
 ChooseProcess:
 Gui, process:Submit, NoHide
 WTSEnumProcesses(), LV_Delete(), count := 0
@@ -832,24 +830,47 @@ loop % arrLIST.MaxIndex()
 }
 return
 
-List:
-gui, process:submit, nohide
-if (A_GuiEvent = "DoubleClick")
-{
-    LV_GetText(Procname, A_EventInfo)  ; Get the text from the row's field.
-    GuiControl,process:, Choose, Choose: %Procname%
-	WinGet, ProcWinID, ID, ahk_exe %Procname%
-    GuiControl, process:Enable, Choose
-}
-Return
-
+; Choose btn
 ConfirmProcess:
 gui, process:destroy
 GroupAdd, ProcessWinIDGroup, ahk_id %ProcWinID%
 #IfWinActive ahk_group ProcessWinIDGroup
 return
 
-	; Define system language. It is necessary for the correct saving of the configuration.
+ProcessMenu:
+Gui, process:Margin, 5, 5
+Gui, process:Add, Edit, xm ym w100 hWndhSearch vsearch
+DllCall("user32.dll\SendMessage", "Ptr", hSearch, "UInt", 0x1501, "Ptr", 1, "Str", "Process Name Here", "Ptr")
+Gui, process:Add, ListView, xm y+5 w160 h90 gList, Name
+Gui, process:Add, Button, xm+100 ym-1 w60 gChooseProcess, Find
+Gui, process:Add, Button, xm ym+117 w160 disabled vChoose gConfirmProcess, Choose
+Gui, process:Show, AutoSize, The script should work in...
+return
+; //
+
+Show:
+Gui, Show
+; Gui, Show, % (i := !i) ? "Hide" : ""
+return
+
+Hide:
+Gui, Hide
+return
+
+GuiClose:
+ExitApp
+return
+
+Reload:
+Reload
+return
+
+!PrintScreen::
+dir := A_WorkingDir "\Screenshots\KeyPressed\"
+Run, "%A_WorkingDir%\Res\i_view32.exe" /capture=3 /convert=%dir%_$U(%OurProfile%`_`%Y-`%m-`%d_`%H`%M`%S).jpg
+return
+
+; Define system language. It is necessary for the correct saving of the configuration.
 GetLayout(ID)
 {
    hWnd := ID = "A" ? WinExist("A") : ID
@@ -872,34 +893,3 @@ WTSEnumProcesses()	{
     DllCall("Wtsapi32\WTSFreeMemory", "Ptr", pPtr)
     return arrLIST, DllCall("SetLastError", "UInt", nTTL)
 }
-
-!PrintScreen::
-dir := A_WorkingDir "\Screenshots\KeyPressed\"
-Run, "%A_WorkingDir%\Res\i_view32.exe" /capture=3 /convert=%dir%_$U(%OurProfile%`_`%Y-`%m-`%d_`%H`%M`%S).jpg
-return
-
-ProcessMenu:
-Gui, process:Margin, 5, 5
-Gui, process:Add, Edit, xm ym w100 hWndhSearch vsearch
-DllCall("user32.dll\SendMessage", "Ptr", hSearch, "UInt", 0x1501, "Ptr", 1, "Str", "Process Name Here", "Ptr")
-Gui, process:Add, ListView, xm y+5 w160 h90 gList, Name
-Gui, process:Add, Button, xm+100 ym-1 w60 gChooseProcess, Find
-Gui, process:Add, Button, xm ym+117 w160 disabled vChoose gConfirmProcess, Choose
-Gui, process:Show, AutoSize, The script should work in...
-return
-
-Show:
-Gui, Show
-return
-
-Hide:
-Gui, Hide
-return
-
-GuiClose:
-ExitApp
-return
-
-Reload:
-Reload
-return

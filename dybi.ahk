@@ -12,6 +12,7 @@
 		~ [1.1.2] Completed dev comments localization
 	Current version: [1.2]
 		~ [1.2.1] Added process selector menu (select the required process from the list of tasks), cosmetic changes
+		~ [1.2.2] Language localization (EN)
 */
 
 ; Sys.cmd
@@ -72,51 +73,51 @@ advancemode := false, advancemode2 := false, hotkeyinprogress := false
 Menu, Tray, Icon, Shell32.dll, 170
 Menu, Tray, add, Process Settings, ProcessMenu,
 Menu, Tray, add,
-Menu, Tray, add, Показать, Show,
-Menu, Tray, Default, Показать,
-Menu, Tray, add, Скрыть, Hide,
+Menu, Tray, add, Show, Show,
+Menu, Tray, Default, Show,
+Menu, Tray, add, Hide, Hide,
 Menu, Tray, add
-Menu, Tray, add, Перезапустить, Reload,
-Menu, Tray, add, Создать профиль, createprofile
-Menu, Tray, disable, Создать профиль
-Menu, Tray, add, Выход, GuiClose,
+Menu, Tray, add, Reload, Reload,
+Menu, Tray, add, Create Profile, createprofile
+Menu, Tray, disable, Create Profile
+Menu, Tray, add, Exit, GuiClose,
 Menu, Tray, NoStandard
 
 GUI:
 Gui, -SysMenu
 Gui, Add, Button, x385 y2 w25 h16  vmenub2 ghide, --
 Gui, Add, Button, x412 y2 w25 h16  vmenub3 gGuiClose, X
-Gui, Add, Button, x12 y80 w150 h23 vsaveall gsaveall +Disabled, Применить настройки
+Gui, Add, Button, x12 y80 w150 h23 vsaveall gsaveall +Disabled, Apply Settings
 Gui, Add, DropDownList, x335 y81 w100 vmove4 gprofile R5, 
-Gui, Add, Button, x228 y80 w105 h23 vmove3 gcreateprofile, Создать профиль
-Gui, Add, Text, x32 y49 w90 h20 , Клавиша
-Gui, Add, Text, x280 y49 w100 h20 , Кол-во строк
-Gui, Add, Text, x10 y13 w200 h14 vcurrentprofile, Текущий профиль: 
-Gui, Add, Text, x142 y49 w100 h20 , Название хоткея
+Gui, Add, Button, x228 y80 w105 h23 vmove3 gcreateprofile, Create Profile
+Gui, Add, Text, x32 y49 w90 h20 , Key
+Gui, Add, Text, x280 y49 w100 h20 , Keys Count
+Gui, Add, Text, x10 y13 w200 h14 vcurrentprofile, Actual Profile: 
+Gui, Add, Text, x142 y49 w100 h20 , Hotkey Name
 Gui, Add, Text, x12 y49 w20 h20 , №
 Gui, Add, GroupBox, x5 y33 w350 h40 ,
 Gui, Add, GroupBox, x365 y33 w70 h40 ,
-Gui, Add, Button, x370 y44 w60 h23 gaddhotkey, Добавить
-Gui, Show, w%winsizew% h%winsizeh% hide, GTA5RP BINDER R.
+Gui, Add, Button, x370 y44 w60 h23 gaddhotkey, Add
+Gui, Show, w%winsizew% h%winsizeh% hide, Dynamic Binder
 
 /* 
 	Expanding a menu window for future hotkeys 
 	(GUI link takes part in the work algorithms and therefore after remove a least hotkey we needed free space, which we create with a crutch) 
 */
 winsizeh += 29
-ControlMove, Применить настройки,,(winsizeh-31),,,GTA5RP BINDER R.
-	ControlMove, Создать профиль,,(winsizeh-31),,,GTA5RP BINDER R.
-		ControlMove, Свернуть,,(winsizeh-31),,,GTA5RP BINDER R.
-	ControlMove, ComboBox1,,(winsizeh-30),,,GTA5RP BINDER R.
-WinMove, GTA5RP BINDER R.,,,, (winsizew), (winsizeh)
+ControlMove, Apply Settings,,(winsizeh-31),,,Dynamic Binder
+	ControlMove, Create Profile,,(winsizeh-31),,,Dynamic Binder
+		ControlMove, Свернуть,,(winsizeh-31),,,Dynamic Binder
+	ControlMove, ComboBox1,,(winsizeh-30),,,Dynamic Binder
+WinMove, Dynamic Binder,,,, (winsizew), (winsizeh)
 
 Gui, key:-SysMenu +Disabled +AlwaysOnTop
-	Gui, key:Add, Text, x65 y7 w350 h40 +Border +Center, `nУдаляем выбранный хоткей. Пожалуйста`, подождите `;)
-Gui, key:Show, w484 h58 hide, Выполняем...
+	Gui, key:Add, Text, x65 y7 w350 h40 +Border +Center, `nDeleting Selected Hotkey. Please`, Wait `;)
+Gui, key:Show, w484 h58 hide, Processing...
 
 Gui, key2:-SysMenu +Disabled +AlwaysOnTop
-	Gui, key2:Add, Text, x65 y7 w350 h40 +Border +Center, `nЗагружаем выбранный профиль. Пожалуйста`, подождите `;)
-Gui, key2:Show, w484 h58 hide, Выполняем...
+	Gui, key2:Add, Text, x65 y7 w350 h40 +Border +Center, `Loading Selected Profile. Please`, Wait `;)
+Gui, key2:Show, w484 h58 hide, Processing...
 
 /*
 */
@@ -127,7 +128,7 @@ FileReadLine, Prof, %A_WorkingDir%\Res\config.txt, 1
 if (RegExMatch(Prof, "\[Load Profile = (.*)\]", profil))	{
 	IfNotExist, %A_WorkingDir%\Profiles\%profil1%
 	{
-		MsgBox, 262160, GTA5RP BINDER R., Файл профиля %profil1% не найден!
+		MsgBox, 262160, Dynamic Binder, Profile File %profil1% not found!
 		return
 	}
 	OurProfile := profil1
@@ -147,14 +148,14 @@ return
 ;  Create profile
 createprofile:
 Gui, settingsmenu:Destroy
-InputBox, NameProfile, GTA5RP BINDER R., Введите название для профиля ниже:,,260,130
+InputBox, NameProfile, Dynamic Binder, Enter Profile Name Below:,,260,130
 if ErrorLevel
     return
 if (NameProfile = "")
 	return
 loop,% hotkeyscount
 	if (hotkey%A_Index% = "")	{
-		MsgBox, 262160, GTA5RP BINDER R., Для сохранения профиля необходимо убрать все пустые хоткеи!
+		MsgBox, 262160, Dynamic Binder, Delete all blank hotkeys!
 		return
 	}
 if (hotkeyscount = 0)
@@ -218,13 +219,13 @@ return
 profile:
 gui, submit, nohide
 OurProfile := move4
-MsgBox, 262180, GTA5RP BINDER R., Загрузить профиль %move4% ?
+MsgBox, 262180, Dynamic Binder, Load Profile %move4% ?
 IfMsgBox, No
 	return
 IfExist, %A_WorkingDir%\Res\config.txt
 	FileDelete, %A_WorkingDir%\Res\config.txt
 FileAppend, [Load Profile = %OurProfile%], %A_WorkingDir%\Res\config.txt
-;~ MsgBox, 262180, GTA5RP BINDER R., Для корректной загрузки профиля, скрипт перед этим необходимо перезагрузить.`n Если вы ещё не делали перезагрузку, нажмите "Да" для принудительной перезагрузки.
+;~ MsgBox, 262180, Dynamic Binder, Для корректной загрузки профиля, скрипт перед этим необходимо перезагрузить.`n Если вы ещё не делали перезагрузку, нажмите "Да" для принудительной перезагрузки.
 ;~ IfMsgBox, Yes
 	Reload
 loadprofile:
@@ -239,7 +240,7 @@ hotkeysizey := "59"
 winpossettingsy := 30
 controlsettingsy := 0
 gosub, GUI
-GuiControl, 1:, currentprofile, Текущий профиль: %OurProfile%
+GuiControl, 1:, currentprofile, Actual Profile: %OurProfile%
 gui, key2:show
 loop, % e1
 	gosub, addhotkey
@@ -249,7 +250,7 @@ Loop, read, %A_WorkingDir%\Profiles\%OurProfile%
 	{
 			if (Regexmatch(A_LoopField, "Count = (\d\d?)", c))	{
 				t1++
-				Control, choose, % c1, % countarray[t1], GTA5RP BINDER R.
+				Control, choose, % c1, % countarray[t1], Dynamic Binder
 				GuiControl, 1:disable, % countarray[t1]
 			}
 			if (Regexmatch(A_LoopField, "Name = (.*)", n))	{
@@ -297,11 +298,11 @@ loop, % listofhotkeys.count()
 	Hotkey, % listofhotkeys[A_Index], off
 loop,% hotkeyscount
 	if (hotkey%A_Index% = "")	{
-		MsgBox, 262160, GTA5RP BINDER R., Для применения профиля необходимо убрать все пустые хоткеи! `n`nЕсли вы уже это сделали, нажмите кнопку сохранить в любом из хоткеев!
+		MsgBox, 262160, Dynamic Binder, For apply profile You should delete all blank hotkeys! `n`Press "Save" button on any hotkey settings page, if You remove blank hotkeys!
 		return
 	}
 if (hotkeyscount = 0)	{
-	MsgBox Количество хоткеев = 0
+	MsgBox, 262160, Dynamic Binder | Error, Hotkeys count equal Zero
 	return
 }
 listofhotkeys := []
@@ -348,7 +349,7 @@ loop, % hotkeyscount
 	}
 }
 gosub, update
-TrayTip, GTA5RP BINDER R.,  Загрузили профиль!, 1
+TrayTip, Dynamic Binder,  Profile Loaded!, 1
 return
 
 ; Activate hotkey
@@ -417,19 +418,19 @@ loop, % settingsarray.count()
 }
 gui, submit, nohide
 if (counthotkeys%CurrentButton% = "")	{
-	MsgBox, 262192, GTA5RP Binder, Для открытия меню настроек выберите необходимое количество строк для бинда`, если это представляется возможным.
+	MsgBox, 262192, Dynamic Binder, For open menu settings choose necessary strings count for bind`, if It's possible.
 	return
 }
 winpossettingsy := 30
 controlsettingsy := 0
 Gui, settingsmenu:Destroy
 Gui, settingsmenu:Font, bold,
-Gui, settingsmenu:Add, Text, x18 y10 w280 h20 , Бинд (строка с текстом или командой)
-Gui, settingsmenu:Add, Text, x520 y10 w120 h20, Задержка (мс)
+Gui, settingsmenu:Add, Text, x18 y10 w280 h20 , Bind (string with text or cmd)
+Gui, settingsmenu:Add, Text, x520 y10 w120 h20, Delay (ms)
 Gui, settingsmenu:Add, Text, x620 y10 w40 h20 , Enter
 Gui, settingsmenu:Add, Text, x670 y10 w40 h20, RShift
 Gui, settingsmenu:Add, Text, x720 y10 w40 h20, Screen
-Gui, settingsmenu:add, button, x772 y14 w82 h26 gsavehotkey, Сохранить
+Gui, settingsmenu:add, button, x772 y14 w82 h26 gsavehotkey, Save
 Gui, settingsmenu:Add, GroupBox, x14 y1 w751 h27 ,
 Gui, settingsmenu:Add, GroupBox, x768 y1 w90 h47 ,
 Gui, settingsmenu:Font, norm,
@@ -443,7 +444,7 @@ loop, % counthotkeys%CurrentButton%
 	Gui, settingsmenu:Add, CheckBox, x680 y%controlsettingsy% w20 h20 vshiftb%CurrentButton%%A_Index%,
 	Gui, settingsmenu:Add, CheckBox, x730 y%controlsettingsy% w20 h20 vscreen%CurrentButton%%A_Index%,
 }
-Gui, settingsmenu:Show, center h%winpossettingsy% w870, % "Настройка хоткея " namehotkeys%CurrentButton%
+Gui, settingsmenu:Show, center h%winpossettingsy% w870, % "Hotkey setting " namehotkeys%CurrentButton%
 gui, settingsmenu:submit, nohide
 loop, % counthotkeys%CurrentButton%
 {
@@ -465,7 +466,7 @@ return
 ; Save hotkey
 savehotkey:
 gui, settingsmenu:submit, nohide
-MsgBox, 262196, GTA5RP Binder, После сохранения параметров`, текущий хоткей и хоткеи до него потеряют свойства к расширению количества отправляемых строк!`n`nРедактировать их можно будет!`n`nСохранить?
+MsgBox, 262196, Dynamic Binder, When data saved`, actual hotkey and previously lost properties to increase the number of strings sent!`n`nIt will be possible to edit!`n`nSave?
 IfMsgBox, No
 	return
 
@@ -520,7 +521,7 @@ return
 ; Remove hotkey
 delete:
 advancemode2 := false
-ControlGetFocus, OutputVar, GTA5RP BINDER R.
+ControlGetFocus, OutputVar, Dynamic Binder
 loop, % deletesarray.count()
 {
 	if (deletesarray[A_Index] = OutputVar)	{
@@ -528,7 +529,7 @@ loop, % deletesarray.count()
 		break
 	}
 }
-MsgBox, 262196, GTA5RP BINDER R., Вы действительно хотите удалить хоткей № %CurrentButton% ?
+MsgBox, 262196, Dynamic Binder, Are you sure want to delete the hotkey № %CurrentButton% ?
 IfMsgBox, No
 	return
 ; Arrays for saving values from win controls variables
@@ -649,7 +650,7 @@ loop, % hotkeyscount
 	GuiControl, 1:Disable, counthotkeys%A_Index%
 	
 ; Removed required hotkey and  
-GuiControl, 1:, currentprofile, Текущий профиль: %OurProfile%
+GuiControl, 1:, currentprofile, Actual Profile: %OurProfile%
 gui, show
 Gui, key:hide
 return
@@ -679,11 +680,10 @@ if (hotkeyscount > 9)	{
 		winsizew = 910
 		winsizeh := "410"
 		advancemode := true
-	ControlMove, U, 808,,,,GTA5RP BINDER R.
-	ControlMove, --, 835,,,,GTA5RP BINDER R.
-	ControlMove, X, 862,,,,GTA5RP BINDER R.
-	ControlMove, Текущий профиль: , 330,,,,GTA5RP BINDER R.
-	ControlMove, <a href="https://www.blast.hk/members/131470/">@bass_devware</a> , 370,,,,GTA5RP BINDER R.
+	ControlMove, U, 808,,,,Dynamic Binder
+	ControlMove, --, 835,,,,Dynamic Binder
+	ControlMove, X, 862,,,,Dynamic Binder
+	ControlMove, Actual Profile: , 330,,,,Dynamic Binder
 		;~ MsgBox 1
 	}
 }	
@@ -705,11 +705,10 @@ if (hotkeyscount < 9)	{
 	hotkeysizex := "40"
 	hotkeysizey := "59"
 	advancemode := false
-	ControlMove, U, 358,,,,GTA5RP BINDER R.
-	ControlMove, --, 385,,,,GTA5RP BINDER R.
-	ControlMove, X, 412,,,,GTA5RP BINDER R.
-	ControlMove, Текущий профиль: , 130,,,,GTA5RP BINDER R.
-	ControlMove, <a href="https://www.blast.hk/members/131470/">@bass_devware</a> , 130,,,,GTA5RP BINDER R.
+	ControlMove, U, 358,,,,Dynamic Binder
+	ControlMove, --, 385,,,,Dynamic Binder
+	ControlMove, X, 412,,,,Dynamic Binder
+	ControlMove, Actual Profile: , 130,,,,Dynamic Binder
 	;~ MsgBox 2
 	}
 }
@@ -726,10 +725,10 @@ if (hotkeyscount = "0")	{
 	hotkeysizey := "59"
 	;~ MsgBox % hotkeyscount
 }
-ControlMove, Применить настройки,,(winsizeh-31),,,GTA5RP BINDER R.
-	ControlMove, Создать профиль,,(winsizeh-31),,,GTA5RP BINDER R.
-	ControlMove, ComboBox1,,(winsizeh-30),,,GTA5RP BINDER R.
-WinMove, GTA5RP BINDER R.,,,, (winsizew), (winsizeh)
+ControlMove, Apply Settings,,(winsizeh-31),,,Dynamic Binder
+	ControlMove, Create Profile,,(winsizeh-31),,,Dynamic Binder
+	ControlMove, ComboBox1,,(winsizeh-30),,,Dynamic Binder
+WinMove, Dynamic Binder,,,, (winsizew), (winsizeh)
 
 if !(advancemode)
 	winsizeh += 26
@@ -746,11 +745,11 @@ Gui, Add, Button, x%sb% y%hotkeysizey% w61 h23 gsettings, S%hotkeyscount%
 Gui, Add, Button, x%db% y%hotkeysizey% w50 h23 gdelete, D%hotkeyscount%
 
 ; Define elements system
-WinGet, controlz, ControlList, GTA5RP BINDER R.
+WinGet, controlz, ControlList, Dynamic Binder
 Loop, parse, controlz, `n,
 {
 	gui, submit, nohide
-	ControlGetText, temp2, %A_LoopField%, GTA5RP BINDER R.
+	ControlGetText, temp2, %A_LoopField%, Dynamic Binder
 
 	; Define settings button
 	if (temp2 = "S" . hotkeyscount)
@@ -792,17 +791,17 @@ Loop, parse, controlz, `n,
 ; IF - restore hotkeys data from variables when we remove one of each hotkeys, ELSE - enter initial data
 if  (5reserve[hotkeyscount] != "")	{
 	GuiControl,, % namesarray[hotkeyscount], % 3reserve[hotkeyscount]
-		GuiControl,, % settingsarray[hotkeyscount], Настройки
-			GuiControl,, % deletesarray[hotkeyscount], Удалить
-				Control, Delete, 1, % countarray[hotkeyscount], GTA5RP BINDER R.
+		GuiControl,, % settingsarray[hotkeyscount], Settings
+			GuiControl,, % deletesarray[hotkeyscount], Delete
+				Control, Delete, 1, % countarray[hotkeyscount], Dynamic Binder
 			GuiControl,, % countarray[hotkeyscount], 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30
-		Control, choose, % 4reserve[hotkeyscount], % countarray[hotkeyscount], GTA5RP BINDER R.
+		Control, choose, % 4reserve[hotkeyscount], % countarray[hotkeyscount], Dynamic Binder
 	GuiControl,, % hotkeysarray[hotkeyscount], % 5reserve[hotkeyscount]
 }	else	{ 
 		GuiControl,, % namesarray[hotkeyscount], HotName
-			GuiControl,, % settingsarray[hotkeyscount], Настройки
-				GuiControl,, % deletesarray[hotkeyscount], Удалить
-				Control, Delete, 1, % countarray[hotkeyscount], GTA5RP BINDER R.
+			GuiControl,, % settingsarray[hotkeyscount], Settings
+				GuiControl,, % deletesarray[hotkeyscount], Delete
+				Control, Delete, 1, % countarray[hotkeyscount], Dynamic Binder
 			GuiControl,, % countarray[hotkeyscount], 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30
 		Control, choose,1,% countarray[hotkeyscount]
 	}

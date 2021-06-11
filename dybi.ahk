@@ -7,9 +7,12 @@
 	Last stable version: [1.0] 11.12.2020
 		~ Screenshot bug fixed
 		~ Banned action to call other hotkeys during active operation
-	Current version: [1.1]
+	Script version 7.6.2021: [1.1]
 		~ [1.1.1] Added comment localization
 		~ [1.1.2] Completed dev comments localization
+	Current version: [1.2]
+		~ [1.2.1] Added process selector menu (select the required process from the list of tasks)
+	
 */
 
 	; Sys.cmd
@@ -23,7 +26,6 @@ FileEncoding, UTF-8
 #NoEnv
 #KeyHistory 0
 #SingleInstance force
-#IfWinActive ahk_exe GTA5.exe
 
 	; Run as Admin
 full_command_line := DllCall("GetCommandLine", "str")
@@ -76,13 +78,8 @@ advancemode2 := false
 hotkeyinprogress := false
 
 Menu, Tray, Icon, Shell32.dll, 170
-Menu, Tray, add, GTA5 Binder, Show,
-Menu, Tray, disable, GTA5 Binder
-Menu, Tray, add, Версия за 20.10.2020, Show,
-Menu, Tray, disable, Версия за 20.10.2020
-Menu, Tray, add, @bass_devware, Show,
-Menu, Tray, disable, @bass_devware
-Menu, Tray, disable, GTA5 Binder
+Menu, Tray, add, Process Settings, ProcessMenu,
+; Menu, Tray, disable, GTA5 Binder
 Menu, Tray, add,
 Menu, Tray, add, Показать, Show,
 Menu, Tray, Default, Показать,
@@ -103,7 +100,7 @@ Gui, Add, DropDownList, x335 y81 w100 vmove4 gprofile R5,
 Gui, Add, Button, x228 y80 w105 h23 vmove3 gcreateprofile, Создать профиль
 Gui, Add, Text, x32 y49 w90 h20 , Клавиша
 Gui, Add, Text, x280 y49 w100 h20 , Кол-во строк
-Gui, Add, Text, x130 y13 w200 h14 vcurrentprofile, Текущий профиль: 
+Gui, Add, Text, x10 y13 w200 h14 vcurrentprofile, Текущий профиль: 
 Gui, Add, Text, x142 y49 w100 h20 , Название хоткея
 Gui, Add, Text, x12 y49 w20 h20 , №
 Gui, Add, GroupBox, x5 y33 w350 h40 ,
@@ -149,6 +146,7 @@ if (RegExMatch(Prof, "\[Load Profile = (.*)\]", profil))	{
 
 	;  Update profile's list from folder
 update:
+SoundBeep, 1000, 100
 GuiControl,, move4, | 
 Loop, %A_WorkingDir%\Profiles\*profile, , 1
 	GuiControl,, move4, %A_LoopFileName%
@@ -824,6 +822,33 @@ if  (5reserve[hotkeyscount] != "")	{
 	}
 return
 
+ChooseProcess:
+Gui, process:Submit, NoHide
+WTSEnumProcesses(), LV_Delete(), count := 0
+loop % arrLIST.MaxIndex()
+{
+    if (InStr(arrLIST[A_Index, "Process"], search))
+        LV_Add("", arrLIST[A_Index, "Process"]), count++
+}
+return
+
+List:
+gui, process:submit, nohide
+if (A_GuiEvent = "DoubleClick")
+{
+    LV_GetText(Procname, A_EventInfo)  ; Get the text from the row's field.
+    GuiControl,process:, Choose, Choose: %Procname%
+	WinGet, ProcWinID, ID, ahk_exe %Procname%
+    GuiControl, process:Enable, Choose
+}
+Return
+
+ConfirmProcess:
+gui, process:destroy
+GroupAdd, ProcessWinIDGroup, ahk_id %ProcWinID%
+#IfWinActive ahk_group ProcessWinIDGroup
+return
+
 	; Define system language. It is necessary for the correct saving of the configuration.
 GetLayout(ID)
 {
@@ -833,11 +858,35 @@ GetLayout(ID)
    Return InputLocaleID = 0x4090409 ? "En" : "Ru"
 }
 
+WTSEnumProcesses()	{
+    local tPtr := 0, pPtr := 0, nTTL := 0, LIST := ""
+    if !(DllCall("Wtsapi32\WTSEnumerateProcesses", "Ptr", 0, "Int", 0, "Int", 1, "PtrP", pPtr, "PtrP", nTTL))
+        return "", DllCall("SetLastError", "Int", -1)
+    tPtr := pPtr
+    arrLIST := []
+    loop % (nTTL)	{
+        arrLIST[A_Index, "Process"] := StrGet(NumGet(tPtr + 8))    ; Process
+        tPtr += (A_PtrSize = 4 ? 16 : 24)                          ; sizeof(WTS_PROCESS_INFO)
+    }
+
+    DllCall("Wtsapi32\WTSFreeMemory", "Ptr", pPtr)
+    return arrLIST, DllCall("SetLastError", "UInt", nTTL)
+}
+
 !PrintScreen::
 dir := A_WorkingDir "\Screenshots\KeyPressed\"
 Run, "%A_WorkingDir%\Res\i_view32.exe" /capture=3 /convert=%dir%_$U(%OurProfile%`_`%Y-`%m-`%d_`%H`%M`%S).jpg
 return
 
+ProcessMenu:
+Gui, process:Margin, 5, 5
+Gui, process:Add, Edit, xm ym w100 hWndhSearch vsearch
+DllCall("user32.dll\SendMessage", "Ptr", hSearch, "UInt", 0x1501, "Ptr", 1, "Str", "Process Name Here", "Ptr")
+Gui, process:Add, ListView, xm y+5 w160 h90 gList, Name
+Gui, process:Add, Button, xm+100 ym-1 w60 gChooseProcess, Find
+Gui, process:Add, Button, xm ym+117 w160 disabled vChoose gConfirmProcess, Choose
+Gui, process:Show, AutoSize, The script should work in...
+return
 
 Show:
 Gui, Show

@@ -13,6 +13,12 @@
 	Current version: [1.2]
 		~ [1.2.1] Added process selector menu (select the required process from the list of tasks), cosmetic changes
 		~ [1.2.2] Language localization (EN)
+		~ [1.2.3] Code optimization, cosmetic changes
+
+	KNOWN ISSUES:
+		~ 1. When we create a some hotkeys, do not fill it and remove one of hotkeys - the ability to change the count of hotkey's strings on unfilled hotkeys is blocking. (finded 6.12.2021)
+
+	CODE BLOCK'S: CD#11
 */
 
 ; Sys.cmd
@@ -85,8 +91,8 @@ Menu, Tray, NoStandard
 
 GUI:
 Gui, -SysMenu
-Gui, Add, Button, x385 y2 w25 h16  vmenub2 ghide, --
-Gui, Add, Button, x412 y2 w25 h16  vmenub3 gGuiClose, X
+Gui, Add, Button, x380 y2 w30 h16  vmenub2 ghide, Hide
+Gui, Add, Button, x412 y2 w30 h16  vmenub3 gGuiClose, Exit
 Gui, Add, Button, x12 y80 w150 h23 vsaveall gsaveall +Disabled, Apply Settings
 Gui, Add, DropDownList, x335 y81 w100 vmove4 gprofile R5, 
 Gui, Add, Button, x228 y80 w105 h23 vmove3 gcreateprofile, Create Profile
@@ -112,16 +118,17 @@ ControlMove, Apply Settings,,(winsizeh-31),,,Dynamic Binder
 WinMove, Dynamic Binder,,,, (winsizew), (winsizeh)
 
 Gui, key:-SysMenu +Disabled +AlwaysOnTop
-	Gui, key:Add, Text, x65 y7 w350 h40 +Border +Center, `nDeleting Selected Hotkey. Please`, Wait `;)
+	Gui, key:Add, Text, x65 y7 w350 h40 +Border +Center, `nDeleting Selected Hotkey
 Gui, key:Show, w484 h58 hide, Processing...
 
 Gui, key2:-SysMenu +Disabled +AlwaysOnTop
-	Gui, key2:Add, Text, x65 y7 w350 h40 +Border +Center, `Loading Selected Profile. Please`, Wait `;)
+	Gui, key2:Add, Text, x65 y7 w350 h40 +Border +Center, `nLoading Selected Profile
 Gui, key2:Show, w484 h58 hide, Processing...
 
 /*
 */
 
+; (Code Block) CD#1 | Local here: loading, profil1, Prof
 ; Trying to load saved profile by reading the config file
 If (loading)	{
 FileReadLine, Prof, %A_WorkingDir%\Res\config.txt, 1
@@ -137,6 +144,7 @@ if (RegExMatch(Prof, "\[Load Profile = (.*)\]", profil))	{
 }
 }
 
+; CD#2
 ;  Update profile's list from folder
 update:
 SoundBeep, 1000, 100
@@ -145,6 +153,7 @@ Loop, %A_WorkingDir%\Profiles\*profile, , 1
 	GuiControl,, move4, %A_LoopFileName%
 return
 
+; CD#3 | Local here: NameProfile
 ;  Create profile
 createprofile:
 Gui, settingsmenu:Destroy
@@ -192,6 +201,7 @@ loop, % hotkeyscount
 gosub, update
 return
 
+; CD#4
 ; Remove profile
 deleteprofile:
 FileDelete, %A_WorkingDir%\Res\config.txt
@@ -215,6 +225,7 @@ gosub, GUI
 gui 1:show
 return
 
+; CD#5 | Local here: t1, t2, t3, c1, n1, h1, s1, sl1, e1, sh1, sc1
 ; Load profile
 profile:
 gui, submit, nohide
@@ -261,26 +272,16 @@ Loop, read, %A_WorkingDir%\Profiles\%OurProfile%
 				t3++
 				GuiControl, 1:, % hotkeysarray[t3], % h1
 			}
-			if (Regexmatch(A_LoopField, "String = (.*)", s))	{
-				t4++
+			if (Regexmatch(A_LoopField, "String = (.*)", s))
 				7reserve.push(s1)
-			}
-			if (Regexmatch(A_LoopField, "Sleep = (\d\d?\d?\d?\d?)", sl))	{
-				t5++
+			if (Regexmatch(A_LoopField, "Sleep = (\d\d?\d?\d?\d?)", sl))
 				8reserve.push(sl1)
-			}
-			if (Regexmatch(A_LoopField, "Enter = (\d)", e))	{
-				t6++
+			if (Regexmatch(A_LoopField, "Enter = (\d)", e))
 				9reserve.push(e1)
-			}
-			if (Regexmatch(A_LoopField, "Shift = (\d)", sh))	{
-				t7++
+			if (Regexmatch(A_LoopField, "Shift = (\d)", sh))
 				10reserve.push(sh1)
-			}
-			if (Regexmatch(A_LoopField, "Screen = (\d)", sc))	{
-				t8++
+			if (Regexmatch(A_LoopField, "Screen = (\d)", sc))
 				11reserve.push(sc1)
-			}
 	}
 }
 gui, key2:hide
@@ -288,6 +289,7 @@ gosub, saveall
 ;~ gui, 1:show
 return
 
+; CD#6
 ; Apply hotkeys
 saveall:
 if (GetLayout("A") != "En")  ; keyboard layout fix for russian/any another layout
@@ -352,6 +354,7 @@ gosub, update
 TrayTip, Dynamic Binder,  Profile Loaded!, 1
 return
 
+; CD#7 | Local here: CurrentScreen, dir2
 ; Activate hotkey
 sendhotkey:
 if (hotkeyinprogress)	{
@@ -406,6 +409,7 @@ Loop, % listofhotkeys.count()
 hotkeyinprogress := false
 return
 
+; CD#8 | Local here: OutputVar | Global: CurrentButton(CD#8, CD#9, CD#10)
 ; Hotkey settings
 settings:
 ControlGetFocus, OutputVar, A
@@ -463,6 +467,7 @@ loop, % counthotkeys%CurrentButton%
 }
 return
 
+; CD#9 | Local here: does
 ; Save hotkey
 savehotkey:
 gui, settingsmenu:submit, nohide
@@ -507,17 +512,18 @@ temp = 0
 		11reserve.RemoveAt(temp, counthotkeys%CurrentButton%)
 		does := false
 	}	
-	7reserve.InsertAt(temp, string%CurrentButton%%A_Index%) ; => ["A", "B"]
-	8reserve.InsertAt(temp, sleep%CurrentButton%%A_Index%) ; => ["A", "B"]
-	9reserve.InsertAt(temp, enterb%CurrentButton%%A_Index%) ; => ["A", "B"]
-	10reserve.InsertAt(temp, shiftb%CurrentButton%%A_Index%) ; => ["A", "B"]
-	11reserve.InsertAt(temp, screen%CurrentButton%%A_Index%) ; => ["A", "B"]
+	7reserve.InsertAt(temp, string%CurrentButton%%A_Index%) 
+	8reserve.InsertAt(temp, sleep%CurrentButton%%A_Index%) 
+	9reserve.InsertAt(temp, enterb%CurrentButton%%A_Index%) 
+	10reserve.InsertAt(temp, shiftb%CurrentButton%%A_Index%) 
+	11reserve.InsertAt(temp, screen%CurrentButton%%A_Index%) 
 }
 guicontrol, 1:Enable, saveall
 gui, settingsmenu:destroy
 ; Arrays for saving values from win controls variables
 return
 
+; CD#10 | Local here: OutputVar, temp1
 ; Remove hotkey
 delete:
 advancemode2 := false
@@ -654,13 +660,14 @@ GuiControl, 1:, currentprofile, Actual Profile: %OurProfile%
 gui, show
 Gui, key:hide
 return
-;~ //////////////////////////////////////////////////////////////////
+
 
 hotkeylabel:
 gui, submit, nohide
 guicontrol, Disable, saveall
 return
 
+; CD#11 | Local here: temp1, controlz, temp2, finded
 	; Add hotkey
 addhotkey:
 gui, submit, nohide
@@ -680,10 +687,10 @@ if (hotkeyscount > 9)	{
 		winsizew = 910
 		winsizeh := "410"
 		advancemode := true
-	ControlMove, U, 808,,,,Dynamic Binder
-	ControlMove, --, 835,,,,Dynamic Binder
-	ControlMove, X, 862,,,,Dynamic Binder
-	ControlMove, Actual Profile: , 330,,,,Dynamic Binder
+	; ControlMove, U, 808,,,,Dynamic Binder
+	ControlMove, Hide, 830,,,,Dynamic Binder
+	ControlMove, Exit, 862,,,,Dynamic Binder
+	; ControlMove, Actual Profile: , 11,,,,Dynamic Binder
 		;~ MsgBox 1
 	}
 }	
@@ -705,10 +712,10 @@ if (hotkeyscount < 9)	{
 	hotkeysizex := "40"
 	hotkeysizey := "59"
 	advancemode := false
-	ControlMove, U, 358,,,,Dynamic Binder
-	ControlMove, --, 385,,,,Dynamic Binder
-	ControlMove, X, 412,,,,Dynamic Binder
-	ControlMove, Actual Profile: , 130,,,,Dynamic Binder
+	; ControlMove, U, 358,,,,Dynamic Binder
+	ControlMove, Hide, 380,,,,Dynamic Binder
+	ControlMove, Exit, 412,,,,Dynamic Binder
+	; ControlMove, Actual Profile: , 11,,,,Dynamic Binder
 	;~ MsgBox 2
 	}
 }

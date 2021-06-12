@@ -8,14 +8,14 @@ Use 2-3 hotkeys or all 20 hotkeys at once.
 
 <hr>
 
-***◻ Bind's can be created by Add btn or loaded from profile file***
+***◻ The Bind's can be created using Add btn or loaded from a profile file***
 
 >![Image alt](https://github.com/mrslv-bss/dynamicbinder/blob/main/Res/dybi.jpg)
 
-***◻ Use additional features like sleep until you click RShift, autopress Enter and make Screenshot***
+***◻ Use additional features like sleep until you click RShift, autopress Enter and take a Screenshot***
 
 >![Image alt](https://github.com/mrslv-bss/dynamicbinder/blob/main/Res/dybi2.jpg)
 
-***◻ Choose neccesary application by writting process name***
+***◻ Select the required application by writing the name of the process in tab menu***
 
 >![Image alt](https://github.com/mrslv-bss/dynamicbinder/blob/main/Res/dybi3.jpg)

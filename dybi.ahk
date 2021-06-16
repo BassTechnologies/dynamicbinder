@@ -7,13 +7,15 @@
 	Last stable version: [1.0] 11.12.2020
 		~ Screenshot bug fixed
 		~ Banned action to call other hotkeys during active operation
-	Script version 7.6.2021: [1.1]
+	Script version 6.7.2021: [1.1]
 		~ [1.1.1] Added comment localization
 		~ [1.1.2] Completed dev comments localization
-	Current version: [1.2]
+	Script version 6.12.2021: [1.2]
 		~ [1.2.1] Added process selector menu (select the required process from the list of tasks), cosmetic changes
 		~ [1.2.2] Language localization (EN)
 		~ [1.2.3] Code optimization, cosmetic changes
+	Current version: [1.3]
+		~ [1.3.1]  Divided the functionality of the main file into several files for better code maintainability. Clear up code.
 
 	KNOWN ISSUES:
 		~ 1. When we create a some hotkeys, do not fill it and remove one of hotkeys - the ability to change the count of hotkey's strings on unfilled hotkeys is blocking. (finded 6.12.2021)
@@ -21,7 +23,6 @@
 	CODE BLOCK'S: CD#11
 */
 
-; Sys.cmd
 SetWorkingDir %A_ScriptDir%
 SetBatchLines -1
 ListLines Off
@@ -33,7 +34,7 @@ FileEncoding, UTF-8
 #KeyHistory 0
 #SingleInstance force
 
-	; Run as Admin
+; Run as Admin
 full_command_line := DllCall("GetCommandLine", "str")
 if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))	{
 	try	{
@@ -46,7 +47,6 @@ if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))	{
 }
 
 ; Initial elements coords variables 
-
 ;~ DropDownList
 ddlx := 282
 ;~ Settings button
@@ -130,19 +130,23 @@ Gui, key2:Show, w484 h58 hide, Processing...
 
 ; (Code Block) CD#1 | Local here: loading, profil1, Prof
 ; Trying to load saved profile by reading the config file
-If (loading)	{
-FileReadLine, Prof, %A_WorkingDir%\Res\config.txt, 1
-if (RegExMatch(Prof, "\[Load Profile = (.*)\]", profil))	{
-	IfNotExist, %A_WorkingDir%\Profiles\%profil1%
-	{
-		MsgBox, 262160, Dynamic Binder, Profile File %profil1% not found!
-		return
-	}
+if (loading)	{
+	FileReadLine, Prof, %A_WorkingDir%\Res\config.txt, 1
+	if (RegExMatch(Prof, "\[Load Profile = (.*)\]", profil))	{
+		IfNotExist, %A_WorkingDir%\Profiles\%profil1%
+		{
+			MsgBox, 262160, Dynamic Binder, Profile File %profil1% not found!
+			return
+		}
 	OurProfile := profil1
 	loading := false
 	gosub, loadprofile
+	}
 }
-}
+
+#include %A_ScriptDir%\Libs\db_funcs.ahk
+#include %A_ScriptDir%\Libs\db_process_func.ahk
+#include %A_ScriptDir%\Libs\db_profile_func.ahk
 
 ; CD#2
 ;  Update profile's list from folder
@@ -151,142 +155,6 @@ SoundBeep, 1000, 100
 GuiControl,, move4, | 
 Loop, %A_WorkingDir%\Profiles\*profile, , 1
 	GuiControl,, move4, %A_LoopFileName%
-return
-
-; CD#3 | Local here: NameProfile
-;  Create profile
-createprofile:
-Gui, settingsmenu:Destroy
-InputBox, NameProfile, Dynamic Binder, Enter Profile Name Below:,,260,130
-if ErrorLevel
-    return
-if (NameProfile = "")
-	return
-loop,% hotkeyscount
-	if (hotkey%A_Index% = "")	{
-		MsgBox, 262160, Dynamic Binder, Delete all blank hotkeys!
-		return
-	}
-if (hotkeyscount = 0)
-	return
-IfExist, %A_WorkingDir%\Profiles\%NameProfile%.profile
-	return
-dir := A_WorkingDir "\Profiles"
-IfNotExist, % dir
-	FileCreateDir, % dir
-FileAppend, % "Global count = " hotkeyscount "`n", %A_WorkingDir%\Profiles\%NameProfile%.profile
-loop, % hotkeyscount
-{
-	mainindex := A_Index
-	temp = 0
-
-; Now, bold selected hotkey by subtracting algorithm
-
-; Collect the total number of lines for all hotkeys up to the selected (incl.)
-	loop, % mainindex
-		temp += counthotkeys%A_Index%
-
-; Subtracting the selected hotkey number from the total
-	temp -= counthotkeys%mainindex%
-
-; Enter to first string of selected hotkey (each hotkey have a N'count of hotkey strings to reproduce)
-	temp += 1
-	FileAppend, % "[" hotkey%mainindex% "]`n" "Name = "namehotkeys%mainindex% "`nCount = " counthotkeys%mainindex% "`n", %A_WorkingDir%\Profiles\%NameProfile%.profile
-	loop, % counthotkeys%mainindex%
-	{
-		FileAppend, % "String = " 7reserve[temp] "`nSleep = " 8reserve[temp] "`nEnter = " 9reserve[temp] "`nShift = " 10reserve[temp] "`nScreen = " 11reserve[temp] "`n", %A_WorkingDir%\Profiles\%NameProfile%.profile
-			temp++
-	}
-}
-gosub, update
-return
-
-; CD#4
-; Remove profile
-deleteprofile:
-FileDelete, %A_WorkingDir%\Res\config.txt
-Gui, 1:destroy
-Gui, settingsmenu:Destroy
-winsizew := "460"
-winsizeh := "116"
-hotkeysizex := "40"
-hotkeysizey := "59"
-winpossettingsy := 30
-controlsettingsy := 0
-hotkeyscount := 0
-hotkeysarray := []
-settingsarray := []
-deletesarray := []
-namesarray := []
-countarray := []
-textnumber := []
-7reserve := [], 8reserve := [], 9reserve := [], 10reserve := [], 11reserve := []
-gosub, GUI
-gui 1:show
-return
-
-; CD#5 | Local here: t1, t2, t3, c1, n1, h1, s1, sl1, e1, sh1, sc1
-; Load profile
-profile:
-gui, submit, nohide
-OurProfile := move4
-MsgBox, 262180, Dynamic Binder, Load Profile %move4% ?
-IfMsgBox, No
-	return
-IfExist, %A_WorkingDir%\Res\config.txt
-	FileDelete, %A_WorkingDir%\Res\config.txt
-FileAppend, [Load Profile = %OurProfile%], %A_WorkingDir%\Res\config.txt
-;~ MsgBox, 262180, Dynamic Binder, Для корректной загрузки профиля, скрипт перед этим необходимо перезагрузить.`n Если вы ещё не делали перезагрузку, нажмите "Да" для принудительной перезагрузки.
-;~ IfMsgBox, Yes
-	Reload
-loadprofile:
-FileReadLine, var, %A_WorkingDir%\Profiles\%OurProfile%, 1
-RegExMatch(var, "Global count = (\d\d?)", e)
-Gui, 1:destroy
-Gui, settingsmenu:Destroy
-winsizew := "460"
-winsizeh := "146"
-hotkeysizex := "40"
-hotkeysizey := "59"
-winpossettingsy := 30
-controlsettingsy := 0
-gosub, GUI
-GuiControl, 1:, currentprofile, Actual Profile: %OurProfile%
-gui, key2:show
-loop, % e1
-	gosub, addhotkey
-Loop, read, %A_WorkingDir%\Profiles\%OurProfile%
-{
-	Loop, parse, A_LoopReadLine, %A_Tab%
-	{
-			if (Regexmatch(A_LoopField, "Count = (\d\d?)", c))	{
-				t1++
-				Control, choose, % c1, % countarray[t1], Dynamic Binder
-				GuiControl, 1:disable, % countarray[t1]
-			}
-			if (Regexmatch(A_LoopField, "Name = (.*)", n))	{
-				t2++
-				GuiControl, 1:, % namesarray[t2], % n1
-			}
-			if (Regexmatch(A_LoopField, "\[(.*)\]", h))	{
-				t3++
-				GuiControl, 1:, % hotkeysarray[t3], % h1
-			}
-			if (Regexmatch(A_LoopField, "String = (.*)", s))
-				7reserve.push(s1)
-			if (Regexmatch(A_LoopField, "Sleep = (\d\d?\d?\d?\d?)", sl))
-				8reserve.push(sl1)
-			if (Regexmatch(A_LoopField, "Enter = (\d)", e))
-				9reserve.push(e1)
-			if (Regexmatch(A_LoopField, "Shift = (\d)", sh))
-				10reserve.push(sh1)
-			if (Regexmatch(A_LoopField, "Screen = (\d)", sc))
-				11reserve.push(sc1)
-	}
-}
-gui, key2:hide
-gosub, saveall
-;~ gui, 1:show
 return
 
 ; CD#6
@@ -323,14 +191,13 @@ if (hotkeyscount = 0)
 	return
 IfExist, %A_WorkingDir%\Profiles\%OurProfile%
 	FileDelete, %A_WorkingDir%\Profiles\%OurProfile%
-dir := A_WorkingDir "\Profiles"
-IfNotExist, % dir
-	FileCreateDir, % dir
+IfNotExist, % A_WorkingDir "\Profiles"
+	FileCreateDir, % A_WorkingDir "\Profiles"
 FileAppend, % "Global count = " hotkeyscount "`n", %A_WorkingDir%\Profiles\%OurProfile%
 loop, % hotkeyscount
 {
 	mainindex := A_Index
-	temp = 0
+	temp := 0
 
 ; Now, bold selected hotkey by subtracting algorithm
 
@@ -342,7 +209,7 @@ loop, % hotkeyscount
 	temp -= counthotkeys%mainindex%
 
 ; Enter to first string of selected hotkey (each hotkey have a N'count of hotkey strings to reproduce)
-	temp += 1
+	temp++
 	FileAppend, % "[" hotkey%mainindex% "]`n" "Name = "namehotkeys%mainindex% "`nCount = " counthotkeys%mainindex% "`n", %A_WorkingDir%\Profiles\%OurProfile%
 	loop, % counthotkeys%mainindex%
 	{
@@ -365,7 +232,7 @@ hotkeyinprogress := true
 Loop, % listofhotkeys.count()
 	if (A_ThisHotkey = listofhotkeys[A_Index])	{
 		CurrentScreen := A_Index
-		temp = 0
+		temp := 0
 
 ; Now, bold selected hotkey by subtracting algorithm
 
@@ -377,33 +244,33 @@ Loop, % listofhotkeys.count()
 		temp -= counthotkeys%A_Index%
 
 ; Enter to first string of selected hotkey (each hotkey have a N'count of hotkey strings to reproduce)
-		temp += 1
+		temp++
 		loop, % counthotkeys%A_Index%
 		{
-		SendMessage, 0x50,, 0x4190419,, A
-		If GetKeyState("END", "P")	{
-			SoundBeep, 2000, 50
-			break
-		}
-		Sendinput, % "{T}{Text}" 7reserve[temp]
-		if (9reserve[temp] = true)
-			Sendinput, % "{enter}"
-		if (10reserve[temp] = true)	{
 			SendMessage, 0x50,, 0x4190419,, A
-			SoundBeep, 500, 100
-			KeyWait, RShift, D
-			KeyWait, RShift
-			SoundBeep, 1000, 50
-		}
-		if (11reserve[temp] = true)	{
-			dir := A_WorkingDir "\Screenshots\" namehotkeys%CurrentScreen%
-			dir2 := namehotkeys%CurrentScreen%
-			IfNotExist, % dir
-				fileCreateDir, % dir
-			Run, "%A_WorkingDir%\Res\i_view32.exe" /capture=3 /convert=%dir%\_$U(%dir2%`_%OurProfile%`_`%Y-`%m-`%d_`%H`%M`%S).jpg
-		}
-		sleep % 8reserve[temp]
-		temp++
+			If GetKeyState("END", "P")	{
+				SoundBeep, 2000, 50
+				break
+			}
+			Sendinput, % "{T}{Text}" 7reserve[temp]
+			if (9reserve[temp] = true)
+				Sendinput, % "{enter}"
+			if (10reserve[temp] = true)	{
+				SendMessage, 0x50,, 0x4190419,, A
+				SoundBeep, 500, 100
+				KeyWait, RShift, D
+				KeyWait, RShift
+				SoundBeep, 1000, 50
+			}
+			if (11reserve[temp] = true)	{
+				dir := A_WorkingDir "\Screenshots\" namehotkeys%CurrentScreen%
+				dir2 := namehotkeys%CurrentScreen%
+				IfNotExist, % dir
+					fileCreateDir, % dir
+				Run, "%A_WorkingDir%\Res\i_view32.exe" /capture=3 /convert=%dir%\_$U(%dir2%`_%OurProfile%`_`%Y-`%m-`%d_`%H`%M`%S).jpg
+			}
+			sleep % 8reserve[temp]
+			temp++
 		}
 	}
 hotkeyinprogress := false
@@ -452,7 +319,7 @@ Gui, settingsmenu:Show, center h%winpossettingsy% w870, % "Hotkey setting " name
 gui, settingsmenu:submit, nohide
 loop, % counthotkeys%CurrentButton%
 {
-	temp = 0
+	temp := 0
 	loop, % CurrentButton
 		temp += counthotkeys%A_Index%
 	temp -= counthotkeys%CurrentButton%
@@ -488,7 +355,7 @@ does := true
 ; Process all hotkey Lines
 loop, % counthotkeys%CurrentButton%
 {
-temp = 0
+temp := 0
 
 ; Now, bold selected hotkey by subtracting algorithm
 
@@ -566,7 +433,7 @@ ts := 20
 gui, destroy
 Gui, settingsmenu:Destroy
 
-temp = 0
+temp := 0
 ; Now, bold selected hotkey by subtracting algorithm
 
 ; Collect the total number of lines for all hotkeys up to the selected (incl.)
@@ -577,15 +444,14 @@ loop, % CurrentButton
 temp -= counthotkeys%CurrentButton%
 
 ; Enter to first string of selected hotkey (each hotkey have a N'count of hotkey strings to reproduce)
-temp += 1
+temp++
 7reserve.RemoveAt(temp, counthotkeys%CurrentButton%)
 8reserve.RemoveAt(temp, counthotkeys%CurrentButton%)
 9reserve.RemoveAt(temp, counthotkeys%CurrentButton%)
 10reserve.RemoveAt(temp, counthotkeys%CurrentButton%)
 11reserve.RemoveAt(temp, counthotkeys%CurrentButton%)
 
-;~ [ IF - Если всего 1 хоткей и его нужно удалить, ELSE - Если хоткеев больше одного ]
-; IF hotkeys count == 1, remove, ELSE - hotkeys count > 1
+; IF hotkeys count == 1 then remove, ELSE - hotkeys count > 1
 if (deletesarray.count() = 1)	{
 	deletesarray.RemoveAt(CurrentButton, 1)
 		settingsarray.RemoveAt(CurrentButton, 1)
@@ -601,54 +467,41 @@ if (deletesarray.count() = 1)	{
 		hotkeyscount := 0
 		gosub, GUI
 		Gui, key:Show
-		;~ Gui, Show
-		;~ MsgBox Количество %temp1%
 		loop, % temp1
 		{
 			if (hotkeyscount >= 10)	{
-				;~ MsgBox % hotkeyscount " " hotkeyscount
 				if !(advancemode2)	{
-				hotkeysizex := "473"
-				hotkeysizey := "59"
-				ddlx = 714
-				sb = 775
-				db = 835
-				ee = 572
-				ts = 450
-				winsizew = 910
-				;~ SoundBeep, 3000, 10
-				advancemode2 := true
-				;~ MsgBox 11
+					hotkeysizex := "473"
+					hotkeysizey := "59"
+					ddlx := 714
+					sb := 775
+					db := 835
+					ee := 572
+					ts := 450
+					winsizew := 910
+					advancemode2 := true
 				}
 			}
 			else if (hotkeyscount <= 9)	{
-				;~ MsgBox % hotkeyscount
-	if !(advancemode2)
-	{
-	ddlx := 282
-	sb := 340
-	db := 400
-	ee := 142
-	ts := 20
-	winsizew := "460"
-	winsizeh := "176"
-	hotkeysizex := "40"
-	hotkeysizey := "59"
-	advancemode2 := true
-	}
-					;~ winsizeh += 29
-			;~ MsgBox plus
-}
-			;~ if (hotkeyscount = 8)	{
-				;~ winsizeh += 52
-			;~ MsgBox plus
-			;~ }
+				if !(advancemode2)	{
+					ddlx := 282
+					sb := 340
+					db := 400
+					ee := 142
+					ts := 20
+					winsizew := "460"
+					winsizeh := "176"
+					hotkeysizex := "40"
+					hotkeysizey := "59"
+					advancemode2 := true
+				}
+			}
 			gosub, addhotkey
 		}
 	}
 	
 	;~ !!!
-	;~ По сути, можно вообще убрать условие if (deletesarray.count() = 1), так как даже без него всё будет работать. Но вдруг нам нужно будет сделать конкретно с первым слотом что-либо.
+		; You can remove if (deletesarray.count() = 1), since without it everything will work. But suddenly we need to do something specifically with the first slot.
 	;~ !!!
 
 ; Blocking already created hotkeys
@@ -660,7 +513,6 @@ GuiControl, 1:, currentprofile, Actual Profile: %OurProfile%
 gui, show
 Gui, key:hide
 return
-
 
 hotkeylabel:
 gui, submit, nohide
@@ -675,8 +527,7 @@ guicontrol, enable, saveall
 
 ; Max 10 hotkeys on one page
 if (hotkeyscount > 9)	{
-	if !(advancemode)
-	{
+	if !(advancemode)	{
 		hotkeysizex := "473"
 		hotkeysizey := "59"
 		ddlx = 714
@@ -684,14 +535,11 @@ if (hotkeyscount > 9)	{
 		db = 835
 		ee = 572
 		ts = 450
-		winsizew = 910
+		winsizew := "910"
 		winsizeh := "410"
 		advancemode := true
-	; ControlMove, U, 808,,,,Dynamic Binder
-	ControlMove, Hide, 830,,,,Dynamic Binder
-	ControlMove, Exit, 862,,,,Dynamic Binder
-	; ControlMove, Actual Profile: , 11,,,,Dynamic Binder
-		;~ MsgBox 1
+		ControlMove, Hide, 830,,,,Dynamic Binder
+		ControlMove, Exit, 862,,,,Dynamic Binder
 	}
 }	
 if (hotkeyscount >= 20)	{
@@ -700,26 +548,22 @@ if (hotkeyscount >= 20)	{
 	return
 }
 if (hotkeyscount < 9)	{
-	if (advancemode)
-	{
-	ddlx := 282
-	sb := 340
-	db := 400
-	ee := 142
-	ts := 20
-	winsizew := "460"
-	winsizeh := "176"
-	hotkeysizex := "40"
-	hotkeysizey := "59"
-	advancemode := false
-	; ControlMove, U, 358,,,,Dynamic Binder
-	ControlMove, Hide, 380,,,,Dynamic Binder
-	ControlMove, Exit, 412,,,,Dynamic Binder
-	; ControlMove, Actual Profile: , 11,,,,Dynamic Binder
-	;~ MsgBox 2
+	if (advancemode)	{
+		ddlx := 282
+		sb := 340
+		db := 400
+		ee := 142
+		ts := 20
+		winsizew := "460"
+		winsizeh := "176"
+		hotkeysizex := "40"
+		hotkeysizey := "59"
+		advancemode := false
+		ControlMove, Hide, 380,,,,Dynamic Binder
+		ControlMove, Exit, 412,,,,Dynamic Binder
 	}
 }
-;~ MsgBox Z%hotkeyscount%Z
+
 if (hotkeyscount = "0")	{
 	ddlx := 282
 	sb := 340
@@ -730,7 +574,6 @@ if (hotkeyscount = "0")	{
 	winsizeh := "176"
 	hotkeysizex := "40"
 	hotkeysizey := "59"
-	;~ MsgBox % hotkeyscount
 }
 ControlMove, Apply Settings,,(winsizeh-31),,,Dynamic Binder
 	ControlMove, Create Profile,,(winsizeh-31),,,Dynamic Binder
@@ -775,7 +618,6 @@ Loop, parse, controlz, `n,
 	if (RegExMatch(A_LoopField, "msctls_hotkey(\d\d\d\d?)", num))	{
 		loop, % hotkeysarray.count()
 		{
-			
 			if (hotkeysarray[A_Index] = "msctls_hotkey" . num1)
 				finded := true
 			if (A_Index = hotkeysarray.count())
@@ -814,46 +656,6 @@ if  (5reserve[hotkeyscount] != "")	{
 	}
 return
 
-; // Choose process
-List:
-gui, process:submit, nohide
-if (A_GuiEvent = "DoubleClick")	{
-    LV_GetText(Procname, A_EventInfo)  ; Get the text from the row's field.
-    GuiControl,process:, Choose, Choose: %Procname%
-	WinGet, ProcWinID, ID, ahk_exe %Procname%
-    GuiControl, process:Enable, Choose
-}
-Return
-
-; Find btn
-ChooseProcess:
-Gui, process:Submit, NoHide
-WTSEnumProcesses(), LV_Delete(), count := 0
-loop % arrLIST.MaxIndex()
-{
-    if (InStr(arrLIST[A_Index, "Process"], search))
-        LV_Add("", arrLIST[A_Index, "Process"]), count++
-}
-return
-
-; Choose btn
-ConfirmProcess:
-gui, process:destroy
-GroupAdd, ProcessWinIDGroup, ahk_id %ProcWinID%
-#IfWinActive ahk_group ProcessWinIDGroup
-return
-
-ProcessMenu:
-Gui, process:Margin, 5, 5
-Gui, process:Add, Edit, xm ym w100 hWndhSearch vsearch
-DllCall("user32.dll\SendMessage", "Ptr", hSearch, "UInt", 0x1501, "Ptr", 1, "Str", "Process Name Here", "Ptr")
-Gui, process:Add, ListView, xm y+5 w160 h90 gList, Name
-Gui, process:Add, Button, xm+100 ym-1 w60 gChooseProcess, Find
-Gui, process:Add, Button, xm ym+117 w160 disabled vChoose gConfirmProcess, Choose
-Gui, process:Show, AutoSize, The script should work in...
-return
-; //
-
 Show:
 Gui, Show
 ; Gui, Show, % (i := !i) ? "Hide" : ""
@@ -875,27 +677,3 @@ return
 dir := A_WorkingDir "\Screenshots\KeyPressed\"
 Run, "%A_WorkingDir%\Res\i_view32.exe" /capture=3 /convert=%dir%_$U(%OurProfile%`_`%Y-`%m-`%d_`%H`%M`%S).jpg
 return
-
-; Define system language. It is necessary for the correct saving of the configuration.
-GetLayout(ID)
-{
-   hWnd := ID = "A" ? WinExist("A") : ID
-   ThreadID := DllCall("GetWindowThreadProcessId", UInt, hWnd, UInt, 0)
-   InputLocaleID := DllCall("GetKeyboardLayout", UInt, ThreadID, UInt)
-   Return InputLocaleID = 0x4090409 ? "En" : "Ru"
-}
-
-WTSEnumProcesses()	{
-    local tPtr := 0, pPtr := 0, nTTL := 0, LIST := ""
-    if !(DllCall("Wtsapi32\WTSEnumerateProcesses", "Ptr", 0, "Int", 0, "Int", 1, "PtrP", pPtr, "PtrP", nTTL))
-        return "", DllCall("SetLastError", "Int", -1)
-    tPtr := pPtr
-    arrLIST := []
-    loop % (nTTL)	{
-        arrLIST[A_Index, "Process"] := StrGet(NumGet(tPtr + 8))    ; Process
-        tPtr += (A_PtrSize = 4 ? 16 : 24)                          ; sizeof(WTS_PROCESS_INFO)
-    }
-
-    DllCall("Wtsapi32\WTSFreeMemory", "Ptr", pPtr)
-    return arrLIST, DllCall("SetLastError", "UInt", nTTL)
-}
